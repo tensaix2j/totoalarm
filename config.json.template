@@ -1,0 +1,11 @@
+{
+	"smtphost": "smtp.gmail.com",
+  	"smtpport": 587,
+	"usetls":true,
+	"username":"username@gmail.com",
+	"password":"password",
+	"recipients":"recipient@gmail.com",
+	"displayname":"Toto Alert"
+}
+
+
