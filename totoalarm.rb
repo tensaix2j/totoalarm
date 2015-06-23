@@ -11,6 +11,10 @@ $config = {
 	"-threshold" => 4000000
 }
 
+#-------------------
+def comma_numbers(number, delimiter = ',')
+  number.to_s.reverse.gsub(%r{([0-9]{3}(?=([0-9])))}, "\\1#{delimiter}").reverse
+end
 
 #----------
 def send_email( smtpserver, smtpport , usetls , sender , sender_password  , receivers , subject , body , displayname)
@@ -48,8 +52,6 @@ def main( argv )
 	prize 		= page.css(".lottery .prize").first.text.gsub("$","").gsub(",","").to_i
 	drawdate 	= Time.parse( page.css(".lottery .end-date").first.text )
 
-	p prize 
-
 	if prize >= $config["-threshold"].to_i 
 
 		email_config = JSON.parse( open("config.json").read )
@@ -61,13 +63,13 @@ def main( argv )
 			email_config["username"] , 
 			email_config["password"] , 
 			email_config["recipients"] , 
-			"TOTO ALERT: Prize of next draw is : $#{prize} " , 
+			"TOTO ALERT: Prize of next draw is : $ #{ comma_numbers(prize) } " , 
 			"Buy some tickets now!",
 			email_config["displayname"]
 		)
 
 	else 
-		puts "Prize $#{prize} is less than threshold of $#{ $config["-threshold"].to_i }"
+		puts "Prize $ #{ comma_numbers(prize) } is less than threshold of $ #{ comma_numbers($config["-threshold"].to_i) }"
 	end
 
 end
