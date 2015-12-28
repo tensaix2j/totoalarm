@@ -49,27 +49,46 @@ def main( argv )
 	rawhtml = open(url).read
 	page = Nokogiri::HTML( rawhtml )   
 	
-	prize 		= page.css(".lottery .prize").first.text.gsub("$","").gsub(",","").to_i
-	drawdate 	= Time.parse( page.css(".lottery .end-date").first.text )
-
-	if prize >= $config["-threshold"].to_i 
-
-		email_config = JSON.parse( open("config.json").read )
+	email_config = JSON.parse( open("config.json").read )
+			
+	begin 
 		
-		send_email( 
-			email_config["smtphost"] , 
-			email_config["smtpport"] , 
-			email_config["usetls"] , 
-			email_config["username"] , 
-			email_config["password"] , 
-			email_config["recipients"] , 
-			"TOTO ALERT: Prize of next draw is : $ #{ comma_numbers(prize) } " , 
-			"Buy some tickets now!",
-			email_config["displayname"]
-		)
+		prize 		= page.css(".draw-details > div")[2].css("div")[1].css("span")[1].text.gsub(" est", "").gsub("$","").gsub(",","").to_i 
+		drawdate 	= Time.parse( page.css(".draw-details > div")[2].css("div")[0].text.gsub(/\n/,"").strip().gsub("Next Draw: ","") )
 
-	else 
-		puts "Prize $ #{ comma_numbers(prize) } is less than threshold of $ #{ comma_numbers($config["-threshold"].to_i) }"
+		if prize >= $config["-threshold"].to_i 
+
+			puts "Ready to send.."
+			
+			send_email( 
+				email_config["smtphost"] , 
+				email_config["smtpport"] , 
+				email_config["usetls"] , 
+				email_config["username"] , 
+				email_config["password"] , 
+				email_config["recipients"] , 
+				"TOTO ALERT: Prize of next draw is : $ #{ comma_numbers(prize) } " , 
+				"Buy some tickets now!",
+				email_config["displayname"]
+			)
+
+		else 
+			puts "Prize $ #{ comma_numbers(prize) } is less than threshold of $ #{ comma_numbers($config["-threshold"].to_i) }"
+		end
+
+	rescue Exception => ex 
+
+		send_email( 
+				email_config["smtphost"] , 
+				email_config["smtpport"] , 
+				email_config["usetls"] , 
+				email_config["username"] , 
+				email_config["password"] , 
+				email_config["recipients"] , 
+				"Error." , 
+				"ex.to_s",
+				email_config["displayname"]
+			)
 	end
 
 end
