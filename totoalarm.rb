@@ -8,7 +8,8 @@ require 'json'
 
 
 $config = {
-	"-threshold" => 4000000
+	"-threshold" => 4000000,
+	"-sendEmail" => 1
 }
 
 #-------------------
@@ -44,8 +45,8 @@ def main( argv )
 
 	$config = $config.merge( Hash[*argv] )
 
-	url  = "http://www.singaporepools.com.sg/en/Documents/SPPL/homepagebodyen.html"
-	
+	url  = "http://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_next_draw_estimate_en.html"
+
 	rawhtml = open(url).read
 	page = Nokogiri::HTML( rawhtml )   
 	
@@ -53,13 +54,15 @@ def main( argv )
 			
 	begin 
 		
-		prize 		= page.css(".draw-details > div")[2].css("div")[1].css("span")[1].text.gsub(" est", "").gsub("$","").gsub(",","").to_i 
-		drawdate 	= Time.parse( page.css(".draw-details > div")[2].css("div")[0].text.gsub(/\n/,"").strip().gsub("Next Draw: ","") )
+		prize 		= page.css("span")[0].text.gsub(" est","").gsub(/[$,]/,"").to_i
+
+		drawdate 	= Time.parse( page.css(".toto-draw-date")[0].text )
 
 		if prize >= $config["-threshold"].to_i 
 
 			puts "Ready to send.."
 			
+
 			send_email( 
 				email_config["smtphost"] , 
 				email_config["smtpport"] , 
@@ -70,7 +73,7 @@ def main( argv )
 				"TOTO ALERT: Prize of next draw is : $ #{ comma_numbers(prize) } " , 
 				"Buy some tickets now!",
 				email_config["displayname"]
-			)
+			) if $config["-sendEmail"] == 1
 
 		else 
 			puts "Prize $ #{ comma_numbers(prize) } is less than threshold of $ #{ comma_numbers($config["-threshold"].to_i) }"
@@ -78,6 +81,7 @@ def main( argv )
 
 	rescue Exception => ex 
 
+		puts ex.to_s
 		send_email( 
 				email_config["smtphost"] , 
 				email_config["smtpport"] , 
@@ -86,9 +90,9 @@ def main( argv )
 				email_config["password"] , 
 				email_config["recipients"] , 
 				"Error." , 
-				"ex.to_s",
+				"#{ ex.to_s }",
 				email_config["displayname"]
-			)
+			) if $config["-sendEmail"] == 1
 	end
 
 end
