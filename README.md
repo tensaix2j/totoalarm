@@ -7,7 +7,7 @@ Toto Alarm
 Send email if next Toto draw prize is greater than some threshold (e.g 4,000,000 SGD)
 
 
-Need to gem install nokogiri if you don't the gem already
+Need to gem install nokogiri if you don't have the gem already
 
 ```
   gem install nokogiri
